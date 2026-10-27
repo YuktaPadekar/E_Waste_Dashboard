@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sikkim E-Waste Generation Inventory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --pine:#173B31;
+    --pine-deep:#0E2620;
+    --paper:#F4EFE4;
+    --paper-dim:#EAE2CF;
+    --saffron:#C9962A;
+    --maroon:#7A2E2E;
+    --ink:#1C231F;
+    --ink-soft:#5B6459;
+    --line:#D9CFB6;
+    --good:#3F7A5C;
+    --warn:#B5432B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 32px 80px;}
+
+  /* Header */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:3px solid var(--pine);
+    padding-bottom:22px;
+    margin-bottom:36px;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--saffron);
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:40px;
+    line-height:1.05;
+    margin:0;
+    color:var(--pine-deep);
+    letter-spacing:-.01em;
+  }
+  header .meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:right;
+    line-height:1.7;
+  }
+  header .meta b{color:var(--pine-deep);}
+
+  /* Section labels */
+  .section-label{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:56px 0 18px;
+  }
+  .section-label .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--saffron);
+    border:1px solid var(--saffron);
+    border-radius:3px;
+    padding:2px 7px;
+  }
+  .section-label h2{
+    font-family:'Fraunces',serif;
+    font-size:21px;
+    font-weight:600;
+    margin:0;
+    color:var(--pine-deep);
+  }
+  .section-label .rule{flex:1;height:1px;background:var(--line);}
+
+  /* KPI row */
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .kpi{
+    background:var(--paper);
+    padding:22px 20px;
+  }
+  .kpi .label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .kpi .value{
+    font-family:'Fraunces',serif;
+    font-size:30px;
+    font-weight:600;
+    color:var(--pine-deep);
+    line-height:1;
+  }
+  .kpi .value span{font-size:16px;font-weight:400;color:var(--ink-soft);}
+  .kpi .sub{margin-top:8px;font-size:12.5px;color:var(--ink-soft);}
+
+  /* Alert */
+  .alert{
+    background:#FBF1E6;
+    border:1px solid var(--saffron);
+    border-left:4px solid var(--warn);
+    padding:18px 22px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+  }
+  .alert .icon{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:18px;
+    color:var(--warn);
+    border:1.5px solid var(--warn);
+    border-radius:50%;
+    width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .alert p{margin:0 0 6px;font-size:14px;line-height:1.6;}
+  .alert p:last-child{margin-bottom:0;}
+  .alert b{color:var(--warn);}
+  .alert code{
+    font-family:'JetBrains Mono',monospace;
+    background:var(--paper-dim);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:12.5px;
+  }
+
+  /* Grid panels */
+  .grid-2{display:grid;grid-template-columns:1.35fr 1fr;gap:24px;}
+  .panel{
+    background:var(--paper);
+    border:1px solid var(--line);
+    padding:22px 22px 14px;
+  }
+  .panel h3{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--pine-deep);
+    margin:0 0 4px;
+  }
+  .panel .desc{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;}
+  .chart-box{position:relative;height:300px;}
+  .chart-box.tall{height:340px;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:right;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--paper);
+    background:var(--pine-deep);
+    padding:10px 12px;
+    font-weight:500;
+  }
+  thead th:first-child{text-align:left;}
+  tbody td{
+    padding:9px 12px;
+    text-align:right;
+    border-bottom:1px solid var(--line);
+    font-variant-numeric:tabular-nums;
+  }
+  tbody td:first-child{
+    text-align:left;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    color:var(--pine-deep);
+  }
+  tbody tr:hover{background:var(--paper-dim);}
+  tbody tr.total td{
+    border-top:2px solid var(--pine);
+    border-bottom:none;
+    font-weight:700;
+    color:var(--pine-deep);
+  }
+  .pc-flag{
+    display:inline-block;
+    margin-left:6px;
+    font-size:10px;
+    font-family:'JetBrains Mono',monospace;
+    background:var(--saffron);
+    color:var(--pine-deep);
+    padding:1px 5px;
+    border-radius:2px;
+    vertical-align:middle;
+  }
+
+  footer{
+    margin-top:56px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  @media (max-width:800px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+    h1{font-size:30px;}
+    header{flex-direction:column;align-items:flex-start;}
+    header .meta{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">State Pollution Control Board · Generation Inventory</div>
+      <h1>Sikkim E‑Waste Dashboard</h1>
+    </div>
+    <div class="meta">
+      Basis: <b>E‑Waste (Management) Rules, 2022, Schedule I</b><br>
+      District data last updated: <b>24 Jul 2026</b><br>
+      6 of 6 districts reporting
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpis" id="kpiRow"></div>
+
+  <div class="section-label" style="margin-top:28px;">
+    <span class="num">i</span>
+    <h2>Data quality note</h2>
+    <div class="rule"></div>
+  </div>
+  <div class="alert">
+    <div class="icon">!</div>
+    <div>
+      <p><b>The sheet's STATE TOTAL row is overstated.</b> It sums the six real districts <i>plus</i> the greyed‑out
+      <code>District A</code> template/example row (population 2,500,000; 380,000 kg). That inflates the printed total
+      from <b>310,500 kg</b> (six actual districts) to <b>690,500 kg</b>, and population from 855,000 to 3,355,000.</p>
+      <p>Every figure and chart on this dashboard uses the <b>corrected, districts‑only total of 310,500 kg</b> across a covered population of 855,000. Recommend deleting or clearly excluding the template row at source before the next reporting cycle.</p>
+    </div>
+  </div>
+
+  <!-- District totals + category share -->
+  <div class="section-label">
+    <span class="num">01</span>
+    <h2>Where the waste is generated</h2>
+    <div class="rule"></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Total generation by district</h3>
+      <div class="desc">Kilograms generated, all categories combined · sorted highest to lowest</div>
+      <div class="chart-box tall"><canvas id="districtBar"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>State‑wide category mix</h3>
+      <div class="desc">Share of the 310,500 kg state total</div>
+      <div class="chart-box tall"><canvas id="categoryDonut"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Category breakdown stacked -->
+  <div class="section-label">
+    <span class="num">02</span>
+    <h2>Composition by district</h2>
+    <div class="rule"></div>
+  </div>
+  <div class="panel">
+    <h3>Category breakdown, per district</h3>
+    <div class="desc">Same totals as above, split into the six Schedule I categories</div>
+    <div class="chart-box tall"><canvas id="stackedBar"></canvas></div>
+  </div>
+
+  <!-- Per capita -->
+  <div class="section-label">
+    <span class="num">03</span>
+    <h2>Generation relative to population</h2>
+    <div class="rule"></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Per‑capita generation</h3>
+      <div class="desc">Grams per person · state average = 363 g/capita (dashed line)</div>
+      <div class="chart-box"><canvas id="perCapitaBar"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Reading this chart</h3>
+      <div class="desc">&nbsp;</div>
+      <p style="font-size:13.5px;line-height:1.75;color:var(--ink);">
+        <b style="color:var(--pine-deep);">Mangan</b> generates the least waste in absolute terms (28,000 kg) but has the
+        <b>highest per‑capita rate in the state (560 g/person)</b> — over 50% above the state average — despite the
+        smallest population. <b style="color:var(--pine-deep);">Gangtok</b> is the largest absolute generator (38.6% of
+        the state total, roughly matching its 37.7% share of population), so its per‑capita rate sits close to average.
+        <b style="color:var(--pine-deep);">Namchi</b> is the lowest per‑capita district at 313 g/person.
+      </p>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="section-label">
+    <span class="num">04</span>
+    <h2>District‑wise inventory</h2>
+    <div class="rule"></div>
+  </div>
+  <div class="panel" style="padding-bottom:4px;">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>District</th>
+            <th>Population</th>
+            <th>IT &amp; Telecom</th>
+            <th>Consumer Electrical</th>
+            <th>Large &amp; Small Eqpt.</th>
+            <th>Lighting</th>
+            <th>Batteries</th>
+            <th>Other</th>
+            <th>Total (kg)</th>
+            <th>kg / capita</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <span>Source: District generation inventory, screenshot dated 26 Jul 2026 · categories per E‑Waste (Management) Rules, 2022, Schedule I</span>
+    <span>Districts‑only totals used throughout — template row excluded</span>
+  </footer>
+
+</div>
+
+<script>
+const FONT = "'Inter', sans-serif";
+Chart.defaults.font.family = FONT;
+Chart.defaults.color = '#5B6459';
+
+const districts = ['Gangtok','Gyalshing','Mangan','Namchi','Pakyong','Soreng'];
+const data = {
+  Gangtok:   {pop:322000, it:32000, con:27500, large:40000, light:5500, bat:10500, other:4500, total:120000},
+  Gyalshing: {pop:156000, it:13500, con:13500, large:16500, light:2200, bat:4800,  other:2000, total:52500},
+  Mangan:    {pop:50000,  it:5500,  con:12000, large:7000,  light:900,  bat:1800,  other:800,  total:28000},
+  Namchi:    {pop:168000, it:15500, con:8000,  large:18500, light:2500, bat:5500,  other:2500, total:52500},
+  Pakyong:   {pop:85000,  it:9000,  con:6500,  large:10500, light:1500, bat:3000,  other:1000, total:31500},
+  Soreng:    {pop:74000,  it:7500,  con:5000,  large:8800,  light:1200, bat:2500,  other:1000, total:26000}
+};
+
+const totalKg = Object.values(data).reduce((s,d)=>s+d.total,0);
+const totalPop = Object.values(data).reduce((s,d)=>s+d.pop,0);
+const avgPerCapitaG = (totalKg*1000/totalPop);
+
+const catTotals = {
+  'IT & Telecom': Object.values(data).reduce((s,d)=>s+d.it,0),
+  'Consumer Electrical': Object.values(data).reduce((s,d)=>s+d.con,0),
+  'Large & Small Eqpt.': Object.values(data).reduce((s,d)=>s+d.large,0),
+  'Lighting': Object.values(data).reduce((s,d)=>s+d.light,0),
+  'Batteries': Object.values(data).reduce((s,d)=>s+d.bat,0),
+  'Other': Object.values(data).reduce((s,d)=>s+d.other,0),
+};
+const topCat = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
+const topDistrict = Object.entries(data).sort((a,b)=>b[1].total-a[1].total)[0];
+const topPerCapita = Object.entries(data).map(([k,d])=>[k, d.total*1000/d.pop]).sort((a,b)=>b[1]-a[1])[0];
+
+// ---- KPI row ----
+const kpiRow = document.getElementById('kpiRow');
+const kpis = [
+  {label:'State total generated', value: (totalKg/1000).toLocaleString(undefined,{maximumFractionDigits:1})+' t', sub:'310,500 kg · districts only, template row excluded'},
+  {label:'Population covered', value:(totalPop/100000).toFixed(2)+' L', sub:totalPop.toLocaleString()+' residents across 6 districts'},
+  {label:'State avg. per capita', value: avgPerCapitaG.toFixed(0)+' g', sub:'per person, per reporting cycle'},
+  {label:'Largest category', value: topCat[0], sub: topCat[1].toLocaleString()+' kg · '+((topCat[1]/totalKg)*100).toFixed(1)+'% of total'},
+];
+kpiRow.innerHTML = kpis.map(k=>`
+  <div class="kpi">
+    <div class="label">${k.label}</div>
+    <div class="value">${k.value}</div>
+    <div class="sub">${k.sub}</div>
+  </div>`).join('');
+
+// ---- Colors ----
+const palette = {
+  it:'#173B31', con:'#3F7A5C', large:'#C9962A', light:'#D8B96C', bat:'#7A2E2E', other:'#B08968'
+};
+
+// ---- District bar (sorted) ----
+const sorted = [...districts].sort((a,b)=>data[b].total-data[a].total);
+new Chart(document.getElementById('districtBar'), {
+  type:'bar',
+  data:{
+    labels: sorted,
+    datasets:[{
+      data: sorted.map(d=>data[d].total),
+      backgroundColor: '#173B31',
+      borderRadius: 2,
+      maxBarThickness: 46
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.parsed.x.toLocaleString()+' kg'}}},
+    scales:{
+      x:{grid:{color:'#D9CFB6'}, ticks:{callback:v=>v.toLocaleString()}},
+      y:{grid:{display:false}}
+    }
+  }
+});
+
+// ---- Category donut ----
+new Chart(document.getElementById('categoryDonut'), {
+  type:'doughnut',
+  data:{
+    labels:Object.keys(catTotals),
+    datasets:[{
+      data:Object.values(catTotals),
+      backgroundColor:[palette.it,palette.con,palette.large,palette.light,palette.bat,palette.other],
+      borderColor:'#F4EFE4',
+      borderWidth:2
+    }]
+  },
+  options:{
+    plugins:{
+      legend:{position:'bottom', labels:{boxWidth:11, padding:12, font:{size:11.5}}},
+      tooltip:{callbacks:{label:c=>c.label+': '+c.parsed.toLocaleString()+' kg ('+((c.parsed/totalKg)*100).toFixed(1)+'%)'}}
+    },
+    cutout:'62%'
+  }
+});
+
+// ---- Stacked bar ----
+new Chart(document.getElementById('stackedBar'), {
+  type:'bar',
+  data:{
+    labels: districts,
+    datasets:[
+      {label:'IT & Telecom', data:districts.map(d=>data[d].it), backgroundColor:palette.it},
+      {label:'Consumer Electrical', data:districts.map(d=>data[d].con), backgroundColor:palette.con},
+      {label:'Large & Small Eqpt.', data:districts.map(d=>data[d].large), backgroundColor:palette.large},
+      {label:'Lighting', data:districts.map(d=>data[d].light), backgroundColor:palette.light},
+      {label:'Batteries', data:districts.map(d=>data[d].bat), backgroundColor:palette.bat},
+      {label:'Other', data:districts.map(d=>data[d].other), backgroundColor:palette.other},
+    ]
+  },
+  options:{
+    plugins:{legend:{position:'bottom', labels:{boxWidth:11,padding:14,font:{size:11.5}}}},
+    scales:{
+      x:{stacked:true, grid:{display:false}},
+      y:{stacked:true, grid:{color:'#D9CFB6'}, ticks:{callback:v=>v.toLocaleString()}}
+    }
+  }
+});
+
+// ---- Per capita bar ----
+const perCapita = districts.map(d=>({d, g: data[d].total*1000/data[d].pop}));
+new Chart(document.getElementById('perCapitaBar'), {
+  type:'bar',
+  data:{
+    labels: perCapita.map(x=>x.d),
+    datasets:[{
+      data: perCapita.map(x=>x.g),
+      backgroundColor: perCapita.map(x=> x.d==='Mangan' ? '#7A2E2E' : '#C9962A'),
+      borderRadius:2,
+      maxBarThickness:40
+    }]
+  },
+  options:{
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(1)+' g/capita'}}
+    },
+    scales:{
+      x:{grid:{display:false}},
+      y:{grid:{color:'#D9CFB6'}, title:{display:true, text:'g / person', font:{size:11}}}
+    }
+  },
+  plugins:[{
+    id:'avgLine',
+    afterDraw(chart){
+      const {ctx, chartArea:{left,right}, scales:{y}} = chart;
+      const yPos = y.getPixelForValue(avgPerCapitaG);
+      ctx.save();
+      ctx.strokeStyle = '#173B31';
+      ctx.setLineDash([5,4]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(left, yPos);
+      ctx.lineTo(right, yPos);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#173B31';
+      ctx.font = '11px JetBrains Mono';
+      ctx.fillText('avg '+avgPerCapitaG.toFixed(0)+' g', left+4, yPos-6);
+      ctx.restore();
+    }
+  }]
+});
+
+// ---- Table ----
+const tbody = document.getElementById('tableBody');
+let rows = districts.map(d=>{
+  const r = data[d];
+  const pc = (r.total*1000/r.pop);
+  const flag = d===topPerCapita[0] ? '<span class="pc-flag">highest/capita</span>' : '';
+  return `<tr>
+    <td>${d}${flag}</td>
+    <td>${r.pop.toLocaleString()}</td>
+    <td>${r.it.toLocaleString()}</td>
+    <td>${r.con.toLocaleString()}</td>
+    <td>${r.large.toLocaleString()}</td>
+    <td>${r.light.toLocaleString()}</td>
+    <td>${r.bat.toLocaleString()}</td>
+    <td>${r.other.toLocaleString()}</td>
+    <td>${r.total.toLocaleString()}</td>
+    <td>${pc.toFixed(0)} g</td>
+  </tr>`;
+}).join('');
+rows += `<tr class="total">
+    <td>State total</td>
+    <td>${totalPop.toLocaleString()}</td>
+    <td>${catTotals['IT & Telecom'].toLocaleString()}</td>
+    <td>${catTotals['Consumer Electrical'].toLocaleString()}</td>
+    <td>${catTotals['Large & Small Eqpt.'].toLocaleString()}</td>
+    <td>${catTotals['Lighting'].toLocaleString()}</td>
+    <td>${catTotals['Batteries'].toLocaleString()}</td>
+    <td>${catTotals['Other'].toLocaleString()}</td>
+    <td>${totalKg.toLocaleString()}</td>
+    <td>${avgPerCapitaG.toFixed(0)} g</td>
+  </tr>`;
+tbody.innerHTML = rows;
+</script>
+</body>
+</html>
